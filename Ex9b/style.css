@@ -1,0 +1,29 @@
+html,
+body, .container {
+display: grid;
+height: 100vh;
+grid-template-rows: 60px 1fr 60px;
+}
+
+.header {
+  text-align: center;
+}
+
+.footer {
+  text-align: left;
+}
+
+.content-body {
+  background-color: forestgreen;
+  margin: 0;
+  padding: 0;
+}
+
+/* This is a fixed size formatting approach on the header, footer, and body */
+.header,
+.footer {
+  background: steelblue;
+  border: 1px;
+  margin: 0;
+  padding: 0;
+}
