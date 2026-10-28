@@ -6,23 +6,25 @@
   <BODY>
     <div class="container">
       <header>
-        <span class="lblPreview">
-          Header
-        </span>
+        <img src="grocery_banner.jpg" style="display: block; margin: 0
+auto;" width="720px" height="220px" alt="Grocery Interior">
       </header>
-      <aside class="sidebar-l">
-        <span class="lblPreview">
-          Left Sidebar
-        </span>
+      <aside>
+        Layer Visibility
+        <div class="sidebar-l-top">
+          <arcgis-layer-list reference-element="myMap"></arcgis-layer-list>
+        </div>
+        Legend
+        <div class="sidebar-l-bottom">
+          <arcgis-legend reference-element="myMap"></arcgis-legend>
+        </div>
       </aside>
       <main>
-        <span class="lblPreview">
-          Main Content Area
-        </span>
+        <arcgis-map item-id="4cc69550456f4a94ace9d737c853b0f6" id="myMap"></arcgis-map>
       </main>
       <footer>
         <span class="lblPreview">
-          Footer
+          Grocery image courtesy <a href="https://youarecurrent.com/wp-content/uploads/2015/07/CIW-DOUGH-0721-FreshThyme-720x220.jpg">Current Publishing</a>
         </span>
       </footer>
     </div>
