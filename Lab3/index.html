@@ -1,32 +1,151 @@
+<!DOCTYPE html>
 <HTML>
   <HEAD>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/light/main.css" />
     <script type="module" src="https://js.arcgis.com/5.1/"></script>
+
   </HEAD>
   <BODY>
     <div class="container">
-      <header>
-        <img src="grocery_banner.jpg" style="display: block; margin: 0
-auto;" width="720px" height="220px" alt="Grocery Interior">
-      </header>
-      <aside>
-        Layer Visibility
-        <div class="sidebar-l-top">
-          <arcgis-layer-list reference-element="myMap"></arcgis-layer-list>
-        </div>
-        Legend
-        <div class="sidebar-l-bottom">
-          <arcgis-legend reference-element="myMap"></arcgis-legend>
-        </div>
-      </aside>
+      <header><img src="grocery_banner.jpg" style="display: block; margin: 0 auto;" width="720px" height="220px" alt="Grocery Interior"></header>
+      <!-- HTML for left sidebar -->
+     <aside class="sidebar-l">
+       Layer Visibility
+       <div class="sidebar-l-top">
+         <arcgis-layer-list reference-element="myMap"></arcgis-layer-list>
+       </div>
+       Legend
+       <div class="sidebar-l-bottom">
+         <arcgis-legend reference-element="myMap"></arcgis-legend>
+       </div>
+     </aside>
       <main>
-        <arcgis-map item-id="4cc69550456f4a94ace9d737c853b0f6" id="myMap"></arcgis-map>
+        <!-- Reference your web map id -->
+        <arcgis-map item-id="4cc69550456f4a94ace9d737c853b0f6" center="-104.95, 39.75" zoom="14" id="myMap" popup-disabled>
+          <arcgis-zoom slot="top-left"></arcgis-zoom>
+           <arcgis-popup slot="popup"></arcgis-popup>
+        </arcgis-map>
       </main>
-      <footer>
-        <span class="lblPreview">
-          Grocery image courtesy <a href="https://youarecurrent.com/wp-content/uploads/2015/07/CIW-DOUGH-0721-FreshThyme-720x220.jpg">Current Publishing</a>
-        </span>
-      </footer>
+        <script type="module">
+        // Import specific JS libraries we need for this analysis
+        const [Map, FeatureLayer, Graphic, GraphicsLayer, MapView, Extent, geometryEngine] = await $arcgis.import([
+          "@arcgis/core/Map.js",
+          "@arcgis/core/layers/FeatureLayer.js",
+          "@arcgis/core/Graphic.js",
+          "@arcgis/core/layers/GraphicsLayer.js",
+          "@arcgis/core/views/MapView.js",
+          "@arcgis/core/geometry/Extent.js",
+          "@arcgis/core/geometry/geometryEngine.js"
+        ]);
+
+        // Refer to slides 
+        // Add TBD
+
+        const featureLayer = new FeatureLayer({
+          portalItem: {
+            id: "cbd25e66314c4b3cb2a4d8732dfb7709", //Denver Grocery Stores layer item id
+          },
+          outFields: ["*"],
+        });
+
+        const viewElement = document.querySelector("arcgis-map");
+        await viewElement.viewOnReady();
+        const map = viewElement.map;
+
+         // Get a reference to the popup component
+        const popupComponent = viewElement.querySelector("arcgis-popup");
+        await popupComponent.componentOnReady();
+
+        // 1. Define a renderer for how the graphics should look
+        // (This is required for the legend to know what symbol to draw)
+        const highlightRenderer = {
+          type: "simple",
+          symbol: {
+            type: "simple-marker",
+            color: "red",
+            size: "10px",
+            outline: { color: "white", width: 1 }
+          }
+        };
+
+        // 2. Create the client-side FeatureLayer
+        const graphicsLayer = new FeatureLayer({
+          title: "Highlighted Stores", // <--- THIS is the name that appears in the Legend
+          source: [], // Start with an empty array of graphics
+          objectIdField: "OBJECTID",
+          fields: [{
+            name: "OBJECTID",
+            type: "oid"
+          }],
+          geometryType: "point",
+          renderer: highlightRenderer
+        });
+
+        map.add(graphicsLayer);
+        const view = viewElement.view;
+
+        viewElement.addEventListener("arcgisViewClick", (event) => {
+            
+            // Extract mapPoint from event.detail
+            const { mapPoint } = event.detail; 
+
+            const queryExtent = view.extent.clone();
+
+            const query = featureLayer.createQuery();
+            query.geometry = queryExtent;
+            query.spatialRelationship = "intersects"; //intersects
+            query.returnGeometry = true;
+            query.outFields = ["name"]; // The store name field in the food stores layer
+            let names = "";
+            let minDist = Infinity;
+            let nearest = "";
+            
+            featureLayer.queryFeatures(query).then((results) => {
+            console.log("Found " + results.features.length + " stores within the bounding box.");
+            
+            results.features.forEach((feature) => {
+
+              // 1. Give each feature an OBJECTID so the FeatureLayer can track them
+              feature.attributes.OBJECTID = feature.attributes.OBJECTID || Math.floor(Math.random() * 1000000);
+
+
+              // 2. Use applyEdits to push the graphics to the layer (DO NOT update .source)
+              graphicsLayer.applyEdits({
+                addFeatures: results.features
+              });
+              // Access the attributes object of the feature
+              const attributes = feature.attributes;
+              const featureName = attributes["name"];
+              names = names + featureName + ", "
+              console.log("Feature name: " + featureName);
+              const dist = geometryEngine.distance(mapPoint, feature.geometry, "miles");
+              if (dist < minDist) {
+                minDist = dist;
+                nearest = `${featureName}`;
+              }
+            });
+            
+            names = names.slice(0, -2)
+            console.log("Names of features found " + names);
+            
+            popupComponent.location = mapPoint;
+            popupComponent.heading = 'Grocery Stores';
+            popupComponent.content = `Nearest grocery store found: ${nearest} (${minDist.toFixed(2)} miles)`;
+            popupComponent.open = true;
+          
+
+            }).catch((error) => {
+              console.error("Query failed: ", error);
+            });
+            
+
+        });
+
+
+        </script>
+        <!-- HTML for footer -->   
+        <footer><span class="lblPreview">Footer</span></footer>   
     </div>
-  </BODY>
+    </BODY>
 </HTML>
