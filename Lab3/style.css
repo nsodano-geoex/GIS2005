@@ -10,7 +10,7 @@ display: grid;
 min-height: 100vh;
 gap: 10px;
 grid-template-columns: 350px 1fr;
-grid-template-rows: 220px 500px 1fr 80px;
+grid-template-rows: 220px 500px 350px 80px;
 grid-template-areas:
 "hd hd"
 "sd-l-top main"
